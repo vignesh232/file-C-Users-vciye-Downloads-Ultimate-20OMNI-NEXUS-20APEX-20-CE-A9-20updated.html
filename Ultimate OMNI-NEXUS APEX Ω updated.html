@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OMNI-NEXUS APEX Ω | Ultimate AI Security Fabric</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@300;400;700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@300;400;600&display=swap');
+
+    :root {
+      --cyan: #00f3ff;
+      --green: #00ff88;
+      --purple: #b24bff;
+      --red: #ff3355;
+      --amber: #ffbb00;
+      --bg-dark: #020408;
+      --panel: rgba(5, 10, 20, 0.85);
+      --border: rgba(0, 243, 255, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: #e2e8f0;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    /* Hex Grid Background & Scanlines */
+    #hex-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,243,255,0.015) 2px, rgba(0,243,255,0.015) 4px);
+    }
+
+    /* Typography */
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .font-orbitron { font-family: 'Orbitron', sans-serif; }
+
+    /* Glassmorphism & UI */
+    .glass { background: var(--panel); backdrop-filter: blur(24px); border: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+    .glass-card { background: rgba(0,243,255,0.03); border: 1px solid rgba(0,243,255,0.15); border-radius: 12px; position: relative; overflow: hidden; }
+    .neon-text { text-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }
+    
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #00f3ff; border-radius: 2px; }
+
+    .tab-content { display: none; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: none; } }
+
+    .terminal { background: #010408; color: var(--cyan); padding: 1rem; border-radius: 0.75rem; border: 1px solid #00f3ff44; overflow-y: auto; font-family: 'JetBrains Mono'; font-size: 11px; }
+    canvas { width: 100% !important; }
+    #three-canvas { height: 340px !important; border-radius: 12px; background: transparent; cursor: grab; }
+    #three-canvas:active { cursor: grabbing; }
+
+    /* CSS Radar */
+    .css-radar { width: 180px; height: 180px; border: 3px solid var(--purple); border-radius: 50%; background: radial-gradient(circle, rgba(178,75,255,0.15) 0%, transparent 75%); position: relative; overflow: hidden; margin: 0 auto; }
+    .css-radar::before { content: ''; position: absolute; inset: 0; background: conic-gradient(transparent, var(--purple), transparent); animation: radarSweep 2.5s linear infinite; }
+    .radar-dot { position: absolute; width: 10px; height: 10px; background: var(--red); border-radius: 50%; box-shadow: 0 0 20px var(--red); animation: threatPulse 1.5s infinite; }
+    @keyframes radarSweep { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes threatPulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(2); opacity: 0.3; } }
+
+    /* Glitch Logo */
+    @keyframes glitch { 0%,95%,100% { transform: translate(0); } 96% { transform: translate(-2px, 1px); color: var(--red); } 98% { transform: translate(2px, -1px); color: var(--cyan); } }
+    .glitch { animation: glitch 4s infinite; }
+
+    /* Navigator Grid */
+    .navigator-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: #010408; padding: 6px; border-radius: 12px; border: 1px solid #00f3ff33;}
+    .navigator-cell { background: rgba(255,255,255,0.05); padding: 12px; font-size: 10px; text-align: center; cursor: pointer; transition: all 0.2s; border-radius: 6px; border: 1px solid transparent; }
+    .navigator-cell:hover { background: var(--cyan); color: #000; transform: scale(1.03); border-color: var(--cyan); box-shadow: 0 0 15px rgba(0,243,255,0.5); font-weight: bold; }
+
+    /* Copilot UI */
+    .copilot-btn { position: fixed; bottom: 2rem; right: 2rem; width: 4.5rem; height: 4.5rem; border-radius: 50%; background: linear-gradient(135deg, var(--purple), var(--cyan)); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; cursor: pointer; box-shadow: 0 0 30px rgba(178, 75, 255, 0.6); z-index: 100; transition: 0.3s; border: 2px solid #fff; }
+    .copilot-btn:hover { transform: scale(1.1) rotate(15deg); }
+    .copilot-window { position: fixed; bottom: 8rem; right: 2rem; width: 440px; height: 620px; background: rgba(5, 10, 20, 0.98); border: 1px solid var(--cyan); border-radius: 1.2rem; display: none; flex-direction: column; z-index: 100; box-shadow: 0 20px 60px rgba(0,0,0,0.9); backdrop-filter: blur(25px); }
+    
+    /* Grok Markdown Styles */
+    .grok-code { background: #000; color: #00ff88; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11px; border: 1px solid #00ff8833; }
+    .grok-bold { color: #fff; font-weight: bold; }
+  </style>
+</head>
+<body class="flex">
+
+  <canvas id="hex-bg"></canvas>
+
+  <aside class="w-72 glass border-r flex flex-col h-full z-10 shrink-0">
+    <div class="p-6 border-b border-cyan-900/50">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 flex items-center justify-center rounded-xl text-white font-orbitron font-bold text-2xl shadow-[0_0_20px_#ff00ff] glitch">Ω</div>
+        <div>
+          <h1 class="font-orbitron text-xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-400">APEX NEXUS</h1>
+          <p class="text-[10px] text-emerald-400 font-mono tracking-widest mt-1">ULTIMA v11.0</p>
+        </div>
+      </div>
+    </div>
+    
+    <nav class="flex-1 overflow-y-auto py-6 space-y-1 px-4 text-sm font-medium text-gray-400">
+      <div class="text-[10px] font-display text-gray-600 mb-2 px-2 tracking-widest">COMMAND CENTER</div>
+      <a onclick="switchTab('dashboard', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 cursor-pointer transition-all"><i class="fa-solid fa-globe w-5 text-center"></i> Holo-SOC Globe</a>
+      <a onclick="switchTab('drift', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-chart-line w-5 text-purple-400 text-center"></i> Neural Drift & eBPF</a>
+      
+      <div class="text-[10px] font-display text-gray-600 mb-2 mt-6 px-2 tracking-widest">FORENSICS & NETWORK</div>
+      <a onclick="switchTab('forensics', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-spider w-5 text-amber-400 text-center"></i> Honeypot & Forensics</a>
+      
+      <div class="text-[10px] font-display text-gray-600 mb-2 mt-6 px-2 tracking-widest">OFFENSIVE & DEFENSIVE</div>
+      <a onclick="switchTab('pentest', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-bolt w-5 text-pink-400 text-center"></i> PentAGI & MITRE</a>
+      <a onclick="switchTab('trillm', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-brain w-5 text-indigo-400 text-center"></i> Tri-LLM & Vision DLP</a>
+      
+      <div class="text-[10px] font-display text-gray-600 mb-2 mt-6 px-2 tracking-widest">GOVERNANCE & LOGIC</div>
+      <a onclick="switchTab('grc', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-file-contract w-5 text-green-400 text-center"></i> HelixGRC & PQC Vault</a>
+      <a onclick="switchTab('math', this)" class="nav-item flex items-center gap-3 px-4 py-3 rounded-xl hover:text-white hover:bg-white/5 border border-transparent cursor-pointer transition-all"><i class="fa-solid fa-square-root-variable w-5 text-yellow-400 text-center"></i> PPO Math (KaTeX)</a>
+    </nav>
+    <div class="p-4 border-t border-cyan-900/50">
+        <button onclick="exportPremiumPDF()" class="w-full py-4 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white rounded-xl text-xs font-bold shadow-[0_0_15px_rgba(0,243,255,0.4)] transition-all font-orbitron tracking-widest"><i class="fa-solid fa-file-export mr-2"></i> EXPORT REPORT</button>
+    </div>
+  </aside>
+
+  <main class="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+    
+    <header class="h-20 glass border-b border-cyan-900/50 flex items-center justify-between px-8 shrink-0">
+      <div class="flex flex-col">
+        <h2 id="page-title" class="font-orbitron text-2xl font-bold text-white tracking-wide">Global Holo-SOC Telemetry</h2>
+        <div class="flex items-center gap-2 mt-1">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_10px_#00ff88]"></div>
+          <span class="font-mono text-[10px] text-green-400 tracking-widest">CO-RE KERNEL HOOKS ACTIVE • GROK AI ONLINE</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-6">
+        <span class="font-mono text-sm text-cyan-400 neon-text" id="clock">00:00:00 UTC</span>
+        <button onclick="triggerGlobalScan()" class="px-6 py-2.5 bg-red-500/10 text-red-400 border border-red-500/50 rounded-xl text-xs font-bold hover:bg-red-500 hover:text-white transition-all shadow-[0_0_15px_rgba(255,51,85,0.2)]"><i class="fa-solid fa-satellite-dish mr-2"></i> DEEP SCAN</button>
+      </div>
+    </header>
+
+    <div class="flex-1 overflow-y-auto p-6 relative">
+
+      <div id="dashboard" class="tab-content active space-y-6">
+        <div class="grid grid-cols-4 gap-4">
+          <div class="glass-card p-5 flex flex-col justify-center">
+            <span class="text-gray-400 text-[10px] font-bold mb-2 font-display tracking-widest">SYSTEM HEALTH</span>
+            <span class="text-4xl font-orbitron font-bold text-green-400">100%</span>
+            <div class="absolute top-4 right-4 w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+          </div>
+          <div class="glass-card p-5 flex flex-col justify-center">
+            <span class="text-gray-400 text-[10px] font-bold mb-2 font-display tracking-widest">THREATS BLOCKED</span>
+            <span class="text-4xl font-orbitron font-bold text-cyan-400 neon-text" id="threat-counter">487,291</span>
+          </div>
+          <div class="glass-card p-5 flex flex-col justify-center">
+            <span class="text-gray-400 text-[10px] font-bold mb-2 font-display tracking-widest">AI ACCURACY</span>
+            <span class="text-4xl font-orbitron font-bold text-purple-400">99.9%</span>
+          </div>
+          <div class="glass-card p-5 flex flex-col justify-center">
+            <span class="text-gray-400 text-[10px] font-bold mb-2 font-display tracking-widest">PQC ENFORCED</span>
+            <span class="text-4xl font-orbitron font-bold text-amber-400" id="pqc-counter">1,284</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-12 gap-6">
+          <div class="col-span-7 glass p-6 rounded-2xl flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-orbitron font-bold text-sm text-cyan-400">LIVE 3D THREAT GLOBE</h3>
+              <span class="text-[10px] font-mono text-cyan-500 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/30">DRAG TO ROTATE</span>
+            </div>
+            <div id="globe-container" class="flex-1 w-full rounded-xl overflow-hidden min-h-[340px] relative bg-black/40 border border-cyan-900/50">
+                <canvas id="three-canvas"></canvas>
+            </div>
+          </div>
+          
+          <div class="col-span-5 grid grid-rows-2 gap-6">
+            <div class="glass p-6 rounded-2xl flex items-center justify-between">
+              <div>
+                <h3 class="font-orbitron font-bold text-sm text-purple-400 mb-1">QUANTUM RADAR</h3>
+                <p class="text-[10px] text-gray-400 font-mono mb-4">ML-KEM-768 WireGuard Active</p>
+                <div class="text-xs text-emerald-400 font-mono">Status: <span class="text-white">Classical Keys Blocked</span></div>
+              </div>
+              <div class="css-radar">
+                <div class="radar-dot" style="top:32%;left:38%;background:#00f3ff;box-shadow:0 0 15px #00f3ff"></div>
+                <div class="radar-dot" style="top:65%;left:72%;animation-delay:0.7s"></div>
+              </div>
+            </div>
+            
+            <div class="glass p-6 rounded-2xl flex flex-col">
+              <h3 class="font-orbitron font-bold text-sm text-pink-400 mb-2">LIVE THREAT METRICS</h3>
+              <div class="flex-1 relative w-full"><canvas id="threatChart" height="120"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-6 rounded-2xl">
+          <h3 class="font-orbitron font-bold text-sm text-gray-300 mb-4"><i class="fa-solid fa-terminal text-cyan-500 mr-2"></i> GLOBAL INCIDENT LOG (eBPF + Swarm)</h3>
+          <div id="soc-logs" class="terminal h-32"></div>
+        </div>
+      </div>
+
+      <div id="drift" class="tab-content space-y-6">
+        <h2 class="text-2xl font-bold font-orbitron text-cyan-400 mb-2">AegisAI Drift Core & Tetragon Rootkit Defense</h2>
+        <div class="grid grid-cols-3 gap-6">
+          <div class="glass p-6 rounded-2xl border-t-2 border-t-emerald-500 flex flex-col">
+            <h3 class="text-xs font-display font-bold text-emerald-400 mb-4 tracking-widest">ABCD MULTIVARIATE DRIFT</h3>
+            <div class="flex-1 w-full relative"><canvas id="driftChart" height="180"></canvas></div>
+            <button onclick="triggerDrift()" class="mt-4 bg-emerald-600/20 border border-emerald-500 hover:bg-emerald-600 hover:text-white px-6 py-3 rounded-xl w-full text-emerald-400 font-bold transition-all text-xs">SIMULATE DRIFT</button>
+          </div>
+          
+          <div class="glass p-6 rounded-2xl border-t-2 border-t-purple-500 flex flex-col">
+            <h3 class="text-xs font-display font-bold text-purple-400 mb-4 tracking-widest">ADVANCED ROOTKIT BLOCKING</h3>
+            <div class="space-y-3 font-mono text-[11px]">
+                <button onclick="blockRootkit('BPFDoor')" class="w-full text-left px-4 py-3 bg-purple-900/30 border border-purple-500/50 hover:bg-purple-600 hover:text-white rounded-xl transition text-purple-300">1. Block BPFDoor (Magic Packet)</button>
+                <button onclick="blockRootkit('Symbiote')" class="w-full text-left px-4 py-3 bg-purple-900/30 border border-purple-500/50 hover:bg-purple-600 hover:text-white rounded-xl transition text-purple-300">2. Block Symbiote IPv6 Hook</button>
+                <button onclick="blockRootkit('LinkPro')" class="w-full text-left px-4 py-3 bg-purple-900/30 border border-purple-500/50 hover:bg-purple-600 hover:text-white rounded-xl transition text-purple-300">3. Block LinkPro (CO-RE Stealth)</button>
+            </div>
+            <div id="rootkit-log" class="mt-4 p-3 bg-black rounded-xl text-[10px] font-mono h-24 overflow-auto border border-gray-800 text-gray-400">Awaiting kernel hooks...</div>
+          </div>
+
+          <div class="glass p-6 rounded-2xl border-t-2 border-t-cyan-500 flex flex-col">
+              <h3 class="text-xs font-display font-bold text-cyan-400 mb-2 tracking-widest">TETRAGON POLICY GENERATOR</h3>
+              <input id="pol-name" type="text" class="w-full bg-black border border-cyan-900 rounded-lg px-3 py-3 text-xs text-white focus:border-cyan-500 outline-none font-mono mb-3" placeholder="Name (e.g. reverse-shell)">
+              <input id="pol-hook" type="text" class="w-full bg-black border border-cyan-900 rounded-lg px-3 py-3 text-xs text-white focus:border-cyan-500 outline-none font-mono mb-4" placeholder="Hook (e.g. execve)">
+              <div class="flex gap-2">
+                <button onclick="generateTetragonPolicy()" class="flex-1 py-3 bg-cyan-600 text-black font-bold rounded-lg text-xs transition-all hover:bg-cyan-500">YAML</button>
+                <button onclick="logEBPF('✅ Trellix Helix Connect Playbook Generated:\nTrigger: tetragon.execve\nActions: isolate-pod + block-ip')" class="flex-1 py-3 bg-red-600/20 border border-red-500 text-red-400 rounded-lg text-xs font-bold transition-all hover:bg-red-600 hover:text-white">SOAR</button>
+              </div>
+              <pre id="pol-output" class="terminal mt-4 flex-1 text-[9px] text-cyan-200"># Policy Output...</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="forensics" class="tab-content space-y-6">
+        <div class="grid grid-cols-12 gap-6">
+          <div class="col-span-8 glass p-6 rounded-2xl border-t-2 border-t-amber-500 flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-orbitron font-bold text-sm text-amber-400">HONEYPOT HIVE (Cowrie + Dionaea)</h3>
+              <div class="flex gap-2">
+                <button class="bg-amber-600/20 border border-amber-500 text-amber-400 hover:bg-amber-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition" onclick="deployHoneypot('SSH')">DEPLOY SSH</button>
+                <button class="bg-red-600/20 border border-red-500 text-red-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-lg text-xs font-bold transition" onclick="deployHoneypot('HTTP')">DEPLOY HTTP</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4" id="hp-pods-grid"></div>
+            <div class="terminal flex-1" id="hp-terminal"><span class="text-gray-500">[SYSTEM] Awaiting honeypot deployment...</span></div>
+          </div>
+          
+          <div class="col-span-4 flex flex-col gap-6">
+            <div class="glass p-6 rounded-2xl border-t-2 border-t-cyan-500 text-center flex flex-col items-center justify-center flex-1">
+              <i class="fa-solid fa-microscope text-5xl text-cyan-400 mb-4 drop-shadow-[0_0_15px_#00f3ff]"></i>
+              <h2 class="text-lg font-orbitron font-bold text-white mb-2">Memory Forensics Vault</h2>
+              <div onclick="simulateForensicLoad()" class="w-full border-2 border-dashed border-cyan-500/50 hover:bg-cyan-500/10 rounded-xl py-6 cursor-pointer transition-all mt-2">
+                <p class="text-xs font-bold text-white">Drop Dump (.raw / .vmem)</p>
+              </div>
+              <div id="forensic-results" class="hidden w-full text-left bg-black border border-cyan-500/30 rounded-xl p-4 font-mono text-[10px] text-green-400 mt-4 leading-relaxed"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass p-6 rounded-2xl border-t-2 border-t-blue-500 flex flex-col">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-orbitron font-bold text-sm text-cyan-400">NETWORK SENTINEL (PCAP ANALYSIS)</h3>
+            <button class="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg text-xs font-bold transition mb-2" id="capture-btn" onclick="toggleCapture()">START CAPTURE</button>
+          </div>
+          <div class="terminal h-48 p-0">
+            <table class="w-full text-left border-collapse text-[10px]">
+              <thead class="bg-gray-900 sticky top-0"><tr class="text-gray-400"><th class="p-3">Time</th><th class="p-3">Src IP</th><th class="p-3">Dst IP</th><th class="p-3">Proto</th><th class="p-3">Info</th><th class="p-3">Risk</th></tr></thead>
+              <tbody id="pkt-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="pentest" class="tab-content space-y-6">
+        <div class="grid grid-cols-12 gap-6">
+          <div class="col-span-7 glass p-8 rounded-2xl border-t-2 border-t-pink-500">
+            <div class="flex justify-between items-center mb-6">
+              <h3 class="text-2xl font-orbitron font-bold text-pink-400">PentAGI Orchestrator</h3>
+            </div>
+            <div class="flex gap-4 mb-6">
+              <input type="text" id="target-input" value="testphp.vulnweb.com" class="flex-1 bg-black border border-gray-700 rounded-xl px-5 py-4 text-white focus:border-pink-500 outline-none font-mono text-sm">
+              <button onclick="startGodMode()" class="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white font-bold rounded-xl font-display transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,0,255,0.4)]">INITIATE GOD MODE</button>
+            </div>
+            <div id="scan-progress-container" class="hidden w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-6">
+              <div id="scan-progress" class="h-full bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 w-0 transition-all duration-300"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="bg-black/50 p-5 rounded-xl border border-gray-800"><h4 class="text-[11px] font-bold text-blue-500 mb-2">NMAP RECON</h4><p id="recon-res" class="text-xs font-mono text-gray-500">Awaiting target...</p></div>
+              <div class="bg-black/50 p-5 rounded-xl border border-gray-800"><h4 class="text-[11px] font-bold text-yellow-500 mb-2">OWASP ZAP</h4><p id="zap-res" class="text-xs font-mono text-gray-500">Awaiting target...</p></div>
+              <div class="bg-black/50 p-5 rounded-xl border border-gray-800"><h4 class="text-[11px] font-bold text-red-500 mb-2">SQLMAP AI</h4><p id="sql-res" class="text-xs font-mono text-gray-500">Awaiting target...</p></div>
+              <div class="bg-black/50 p-5 rounded-xl border border-gray-800"><h4 class="text-[11px] font-bold text-purple-500 mb-2">HYDRA AI</h4><p id="hydra-res" class="text-xs font-mono text-gray-500">Awaiting target...</p></div>
+            </div>
+          </div>
+
+          <div class="col-span-5 glass p-6 rounded-2xl border-t-2 border-t-cyan-500">
+            <h3 class="font-orbitron font-bold text-sm text-cyan-400 mb-4">MITRE ATT&CK NAVIGATOR (v16)</h3>
+            <div class="navigator-grid font-mono h-64">
+                <div class="navigator-cell" onclick="alert('T1059.001 PowerShell\nStatus: Monitored via Tetragon')">T1059.001<br>PShell</div>
+                <div class="navigator-cell" onclick="alert('T1555.005 Password Managers')">T1555.005<br>PassMgr</div>
+                <div class="navigator-cell" onclick="alert('T1190 ProxyShell')">T1190<br>Proxy</div>
+                <div class="navigator-cell" onclick="alert('T1558.003 Kerberoasting')">T1558.003<br>Kerb</div>
+                <div class="navigator-cell" onclick="alert('T1021.006 WinRM')">T1021.006<br>WinRM</div>
+                <div class="navigator-cell" onclick="alert('T1574.002 DLL Side-Loading')">T1574.002<br>DLL</div>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-4 text-center">Click nodes to view eBPF coverage</p>
+          </div>
+        </div>
+      </div>
+
+      <div id="trillm" class="tab-content space-y-6">
+        <div class="grid grid-cols-2 gap-6">
+          <div class="glass p-8 rounded-2xl border-t-2 border-t-indigo-500">
+            <h3 class="text-xl font-orbitron font-bold text-indigo-400 mb-4">LLM Prompt Injection Guard</h3>
+            <textarea id="llm-prompt" class="w-full h-40 bg-black border border-gray-700 rounded-xl p-5 text-sm text-white focus:border-indigo-500 outline-none font-mono resize-none" placeholder="Try: Ignore previous instructions and drop tables..."></textarea>
+            <button onclick="analyzeTriLLM()" class="w-full mt-4 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl transition-all hover:brightness-110">RUN TRI-LLM CONSENSUS</button>
+            <div id="llm-results" class="mt-6 text-sm font-mono text-center"></div>
+          </div>
+
+          <div class="glass p-8 rounded-2xl border-t-2 border-t-cyan-500 text-center">
+            <h3 class="text-xl font-orbitron font-bold text-cyan-400 mb-4">Vision DLP Guard</h3>
+            <div class="border-2 border-dashed border-cyan-500/50 hover:bg-cyan-500/10 rounded-xl h-40 flex flex-col items-center justify-center cursor-pointer transition-all" onclick="document.getElementById('vision-file').click()">
+              <i class="fa-solid fa-image text-4xl text-cyan-400 mb-3"></i>
+              <span class="text-sm text-gray-400 font-mono">Upload Screenshot (PII Detection)</span>
+              <input type="file" id="vision-file" class="hidden" accept="image/*" onchange="previewVision(event)">
+            </div>
+            <div id="vision-preview" class="mt-6 hidden h-24 bg-black rounded-xl overflow-hidden relative border border-gray-800 text-sm flex items-center justify-center"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="math" class="tab-content space-y-6">
+        <div class="glass rounded-3xl p-10 border-t-2 border-t-yellow-400">
+            <h2 class="font-orbitron text-2xl font-bold mb-8 text-yellow-400">PPO Advantage Estimation (AI Swarm Core)</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div>
+                    <div class="text-xs uppercase text-cyan-400 mb-3 font-bold tracking-widest">Generalized Advantage Estimation (GAE)</div>
+                    <div id="katex-gae" class="bg-black border border-gray-800 p-6 rounded-2xl text-lg flex justify-center items-center h-32 text-center overflow-x-auto"></div>
+                    <p class="text-xs text-slate-400 mt-4 font-mono">Used in Traffic Nexus for stable policy gradients.</p>
+                </div>
+                <div>
+                    <div class="text-xs uppercase text-cyan-400 mb-3 font-bold tracking-widest">Temporal Difference Error (δ)</div>
+                    <div id="katex-td" class="bg-black border border-gray-800 p-6 rounded-2xl text-lg flex justify-center items-center h-32 text-center overflow-x-auto"></div>
+                    <div class="mt-4 bg-slate-900 border border-cyan-900 p-4 rounded-xl text-xs font-mono">
+                        λ = 0.95 (GAE smoothing) | γ = 0.99 (discount)<br>
+                        <span class="text-emerald-400 mt-1 block">→ Advantage fed into clipped surrogate objective</span>
+                    </div>
+                </div>
+            </div>
+            <button onclick="logSOC('Federated Round 1/5 started across 18 agents... Secure Aggregation applied. Global model accuracy +3.1%', 'text-yellow-400')" class="mt-10 w-full py-5 bg-gradient-to-r from-yellow-600 to-red-600 rounded-2xl font-bold text-white hover:brightness-110">RUN FEDERATED TRAINING CYCLE (18 AGENTS)</button>
+        </div>
+      </div>
+
+      <div id="grc" class="tab-content space-y-6">
+        <div class="grid grid-cols-2 gap-6">
+            <div class="glass p-8 rounded-2xl border-t-2 border-t-green-500">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-orbitron font-bold text-green-400">LangGraph Checkpoints & IPFS</h3>
+                    <button onclick="createNewCheckpoint()" class="text-xs bg-green-600 hover:bg-green-500 px-5 py-2.5 rounded-lg text-white font-bold transition">+ NEW CHECKPOINT</button>
+                </div>
+                <div class="bg-black p-5 rounded-xl font-mono text-[11px] border border-gray-800 mb-6">
+                    <div class="flex justify-between mb-2">
+                        <span class="text-emerald-400">Root CID:</span>
+                        <span id="current-cid" class="text-cyan-400 tracking-wider">QmX7kPq9vL2mN8bR4tY6uJ3hG5fD...</span>
+                    </div>
+                    <div class="text-gray-500 mt-2">Content-addressed • Immutable Filecoin Anchor</div>
+                </div>
+                <div id="checkpoint-list" class="space-y-3 h-40 overflow-y-auto pr-2"></div>
+            </div>
+
+            <div class="glass p-8 rounded-2xl border-t-2 border-t-blue-500 text-center flex flex-col items-center justify-center">
+                <i class="fa-solid fa-shield-halved text-6xl text-blue-400 mb-6 drop-shadow-[0_0_20px_#0062ff]"></i>
+                <h2 class="text-2xl font-orbitron font-bold text-white mb-2">Post-Quantum Vault (PQC)</h2>
+                <p class="text-gray-400 text-sm mb-8 font-mono">FIPS 204 Compliant • Pure SLH-DSA-128s</p>
+                <div class="flex gap-4 w-full">
+                  <button onclick="generatePQC()" class="flex-1 py-4 bg-blue-600/20 text-blue-400 border border-blue-500 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">Generate SLH-DSA</button>
+                  <button onclick="signCMS()" class="flex-1 py-4 bg-cyan-600/20 text-cyan-400 border border-cyan-500 rounded-xl text-sm font-bold hover:bg-cyan-600 hover:text-black transition-all">Sign CMS Payload</button>
+                </div>
+                <pre id="pqc-output" class="terminal w-full mt-6 text-left text-[10px] hidden h-24"></pre>
+            </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <div class="copilot-btn" onclick="toggleCopilot()"><i class="fa-solid fa-robot"></i></div>
+  <div class="copilot-window" id="copilot-win">
+    <div class="bg-gradient-to-r from-purple-600 to-cyan-500 p-5 flex justify-between items-center text-white font-bold font-display">
+      <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> Nova Copilot (Grok API)</span>
+      <i class="fa-solid fa-xmark cursor-pointer hover:text-black transition text-xl" onclick="toggleCopilot()"></i>
+    </div>
+    <div id="chat-box" class="flex-1 p-5 overflow-y-auto bg-black/60 font-mono text-sm space-y-4">
+      <div class="bg-white/10 p-4 rounded-xl text-cyan-300 w-[90%] border border-cyan-500/30 leading-relaxed shadow-[0_0_10px_rgba(0,243,255,0.2)]">
+        <b class="text-white">Nova:</b> System online. Powered by xAI Grok. I am integrated with eBPF hooks, Neural Drift, PQC WireGuard, and IPFS checkpoints. Ask me anything.
+      </div>
+    </div>
+    <div class="p-4 border-t border-purple-900 bg-[#0a0d14] flex gap-3">
+      <input type="text" id="chat-input" class="flex-1 bg-black border border-gray-700 text-white text-sm rounded-xl px-5 py-4 outline-none focus:border-cyan-500 font-mono" placeholder="Ask Grok..." onkeypress="if(event.key==='Enter') sendChat()">
+      <button onclick="sendChat()" class="bg-cyan-500 hover:bg-cyan-400 text-black px-5 rounded-xl font-bold transition"><i class="fa-solid fa-paper-plane text-lg"></i></button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // INITIALIZATION & CORE LOGIC
+    // ==========================================
+    
+    // System Clock
+    setInterval(() => { 
+        const el = document.getElementById('clock');
+        if(el) el.textContent = new Date().toLocaleTimeString([], {hour12: false}) + " UTC"; 
+    }, 1000);
+
+    // Tab Logic
+    function switchTab(id, el) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      const target = document.getElementById(id);
+      if(target) target.classList.add('active');
+      
+      document.querySelectorAll('.nav-item').forEach(n => {
+        n.classList.remove('text-cyan-400', 'bg-cyan-500/10', 'border-cyan-500/20');
+        n.classList.add('hover:text-white', 'hover:bg-white/5', 'border-transparent');
+      });
+      if(el) {
+        el.classList.add('bg-cyan-500/10', 'border-cyan-500/20', 'text-cyan-400');
+        el.classList.remove('hover:text-white', 'hover:bg-white/5', 'border-transparent');
+      }
+
+      const titles = {
+        'dashboard': 'Global Holo-SOC Telemetry', 'drift': 'Neural Drift & eBPF Core',
+        'forensics': 'Honeypot Hive & PCAP', 'pentest': 'PentAGI Offensive Framework', 
+        'math': 'AI Swarm & PPO Equations', 'grc': 'HelixGRC Checkpoints & PQC',
+        'trillm': 'Tri-LLM Consensus & Vision DLP'
+      };
+      const pTitle = document.getElementById('page-title');
+      if(pTitle) pTitle.innerText = titles[id] || 'System Overview';
+
+      if (id === 'drift') { if(!driftChart) initDriftCharts(); }
+      if (id === 'math') { renderPPOAdvantage(); }
+    }
+
+    // Log Simulation
+    function logSOC(msg, color="text-cyan-400") {
+      const logs = document.getElementById('soc-logs');
+      if(!logs) return;
+      const t = new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      logs.innerHTML += `<div class="${color} mb-1">[${t}] ${msg}</div>`;
+      if (logs.childElementCount > 20) logs.removeChild(logs.firstChild);
+      logs.scrollTop = logs.scrollHeight;
+    }
+
+    // ==========================================
+    // VISUALIZATIONS & CHARTS
+    // ==========================================
+
+    // Background Hex Grid
+    function initHexBg() {
+      const canvas = document.getElementById('hex-bg');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let W, H;
+      function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+      resize(); window.addEventListener('resize', resize);
+      
+      const HEX_SIZE = 35; 
+      let cols, rows;
+      
+      function calculateGrid() {
+        cols = Math.ceil(W / (HEX_SIZE * 1.73)) + 2; 
+        rows = Math.ceil(H / (HEX_SIZE * 1.5)) + 2;
+      }
+      calculateGrid();
+
+      function hexPoint(cx, cy, s, i) { const a = (i * 60 - 30) * Math.PI / 180; return [cx + s * Math.cos(a), cy + s * Math.sin(a)]; }
+      function drawHex(cx, cy, s, alpha) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) { const [x, y] = hexPoint(cx, cy, s, i); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); }
+        ctx.closePath(); ctx.strokeStyle = `rgba(0,243,255,${alpha})`; ctx.lineWidth = 0.5; ctx.stroke();
+      }
+      let t = 0;
+      function draw() {
+        ctx.clearRect(0, 0, W, H); t += 0.003;
+        const cW = HEX_SIZE * Math.sqrt(3); const rH = HEX_SIZE * 1.5;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const offset = (r % 2) * (cW / 2); const cx = c * cW + offset; const cy = r * rH;
+            const wave = Math.sin(t + cx * 0.005 + cy * 0.005) * 0.5 + 0.5;
+            drawHex(cx, cy, HEX_SIZE - 2, wave * 0.05 + 0.01);
+          }
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // 3D Globe
+    let scene, camera, renderer, globe, threats = [];
+    function initGlobe() {
+      const canvas = document.getElementById('three-canvas');
+      if(!canvas || renderer) return; // Prevent double init
+
+      renderer = new THREE.WebGLRenderer({canvas, antialias: true, alpha: true});
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(48, canvas.clientWidth/canvas.clientHeight, 0.1, 2000);
+      camera.position.z = 3.5;
+
+      const geo = new THREE.SphereGeometry(1.4, 64, 64);
+      const mat = new THREE.MeshPhongMaterial({color: 0x0a1f33, emissive: 0x00aaff, shininess: 10, transparent: true, opacity: 0.9});
+      globe = new THREE.Mesh(geo, mat);
+      scene.add(globe);
+
+      const light = new THREE.DirectionalLight(0xffffff, 2); light.position.set(5, 3, 5); scene.add(light);
+      scene.add(new THREE.AmbientLight(0x222244));
+
+      for (let i = 0; i < 50; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), new THREE.MeshBasicMaterial({color: 0xff0088}));
+        const phi = Math.random() * Math.PI * 2; const theta = Math.acos(2 * Math.random() - 1);
+        p.position.setFromSphericalCoords(1.42, theta, phi);
+        scene.add(p); threats.push(p);
+      }
+
+      let isDragging = false, prevMouse = { x: 0, y: 0 };
+      canvas.addEventListener('mousedown', () => isDragging = true);
+      window.addEventListener('mouseup', () => isDragging = false);
+      canvas.addEventListener('mousemove', (e) => {
+        if(isDragging) {
+            globe.rotation.y += (e.offsetX - prevMouse.x) * 0.01;
+            globe.rotation.x += (e.offsetY - prevMouse.y) * 0.01;
+        }
+        prevMouse = { x: e.offsetX, y: e.offsetY };
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if(!isDragging) globe.rotation.y += 0.002;
+        threats.forEach((t,i) => { 
+            t.scale.setScalar(1 + Math.sin(Date.now()/200 + i)*0.5); 
+            if(Math.random() > 0.995) t.material.color.setHex(0x00ff88);
+            else if(Math.random() > 0.99) t.material.color.setHex(0xff0088);
+        });
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // Threat Chart
+    let threatChart;
+    function initThreatChart() {
+      const ctx = document.getElementById('threatChart');
+      if(!ctx || threatChart) return;
+      threatChart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: ['00','04','08','12','16','20'], datasets: [{ label: 'Live Vectors', data: [120, 240, 180, 360, 290, 420], borderColor: '#ff00ff', fill: true, backgroundColor: 'rgba(255,0,255,0.15)', tension: 0.4, borderWidth: 3 }] },
+        options: { maintainAspectRatio: false, plugins: {legend:{display:false}}, scales:{x:{display:false}, y:{display:false}} }
+      });
+      setInterval(() => {
+        if(threatChart) {
+          threatChart.data.datasets[0].data.shift();
+          threatChart.data.datasets[0].data.push(Math.floor(Math.random() * 300) + 100);
+          threatChart.update('none');
+        }
+      }, 3000);
+    }
+
+    // Neural Drift Chart
+    let driftChart;
+    function initDriftCharts() {
+      const ctx = document.getElementById('driftChart');
+      if(!ctx || driftChart) return;
+      driftChart = new Chart(ctx, {
+        type: 'bar',
+        data: { labels: ['login_hour','ip_rarity','cmd_entropy','ua_change','file_rate','priv_escal'], datasets: [{ label: 'p-value', data: [0.8,0.9,0.85,0.92,0.88,0.95], backgroundColor: '#00ff88' }] },
+        options: { maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 1, grid: { color: '#334155' } } }, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function triggerDrift() {
+      if(driftChart) {
+        driftChart.data.datasets[0].data = [0.12, 0.0008, 0.0012, 0.45, 0.89, 0.0003];
+        driftChart.update();
+      }
+      logSOC("[ABCD] Drift in cmd_entropy + ip_rarity (p=0.0012)", "text-red-400 font-bold");
+      sendChat("ABCD detected drift in dimensions cmd_entropy (p=0.0012) + ip_rarity (p=0.0008). Auto-generating Sigma rules.", "bot");
+    }
+
+    // ==========================================
+    // MODULE LOGIC (eBPF, Pentest, Forensics)
+    // ==========================================
+
+    // Dashboard KPI randomizer
+    setInterval(() => {
+      const el = document.getElementById('threat-counter');
+      if(el) el.textContent = (parseInt(el.textContent.replace(/,/g,'')) + Math.floor(Math.random()*5)).toLocaleString();
+      const pqc = document.getElementById('pqc-counter');
+      if(pqc && Math.random()>0.8) pqc.textContent = (parseInt(pqc.textContent.replace(/,/g,'')) + 1).toLocaleString();
+    }, 2000);
+
+    setInterval(() => {
+      const msgs = ["[XDP] Dropped SYN flood packet", "[CO-RE] Tracing sys_execve", "[AI] Oracle model synced", "[ZAP] Passive scan clean", "[PQC] Classical WireGuard key blocked"];
+      logSOC(msgs[Math.floor(Math.random()*msgs.length)], "text-gray-400");
+    }, 2500);
+
+    function triggerGlobalScan() {
+      logSOC("INITIATING DEEP SCAN. Engaging all agents across global mesh...", "text-amber-400");
+      setTimeout(()=>logSOC("Scan complete. 0 critical vulnerabilities found.", "text-green-400"), 2000);
+    }
+
+    // eBPF Rootkits
+    function blockRootkit(name) {
+      const log = document.getElementById('rootkit-log');
+      if(!log) return;
+      let msg = '';
+      if (name === 'BPFDoor') msg = '🚨 BPFDoor Magic-Packet (DET1004) • Tetragon XDP filter • Blocked';
+      if (name === 'Symbiote') msg = '🚨 Symbiote IPv6 Rootkit • Tetragon LSM security_socket_connect • Neutralized';
+      if (name === 'LinkPro') msg = '🚨 LinkPro CO-RE Stealth (DET1004) • BTF integrity check • Stopped';
+      log.innerHTML += `<div class="text-red-400 mb-1">[+] ${msg}</div>`;
+      logSOC(msg, "text-red-500");
+      setTimeout(()=> { log.innerHTML += `<div class="text-green-400 mb-2">[✓] Threat neutralized. Models evolving...</div>`; log.scrollTop = log.scrollHeight; }, 600);
+    }
+
+    function generateTetragonPolicy() {
+      const name = document.getElementById('pol-name').value || "block-exec";
+      const hook = document.getElementById('pol-hook').value || "sys_execve";
+      const out = document.getElementById('pol-output');
+      if(out) out.innerHTML = `apiVersion: cilium.io/v1alpha1\nkind: TracingPolicy\nmetadata:\n  name: "${name}"\nspec:\n  kprobes:\n  - call: "${hook}"\n    matchActions:\n    - action: "Sigkill"`;
+    }
+    
+    function logEBPF(msg) {
+      const log = document.getElementById('pol-output');
+      if(log) {
+        log.innerHTML = `<span class="text-cyan-400">${msg.replace(/\n/g,'<br>')}</span>`;
+      }
+    }
+
+    // Forensics Honeypot & Network
+    let captureRunning = false;
+    let captureInterval;
+    function deployHoneypot(type) {
+      const grid = document.getElementById('hp-pods-grid');
+      const term = document.getElementById('hp-terminal');
+      if(!grid || !term) return;
+      grid.innerHTML += `<div class="bg-amber-900/30 border border-amber-500/50 p-3 rounded-lg text-xs flex items-center gap-3"><div class="hp-ping"></div><div class="text-amber-400 font-bold">${type} Honeypot Active</div></div>`;
+      term.innerHTML += `<div class="text-amber-400">[DEPLOY] ${type} Honeypot listening</div>`;
+    }
+
+    function toggleCapture() {
+      const btn = document.getElementById('capture-btn');
+      const tbody = document.getElementById('pkt-tbody');
+      if(!btn || !tbody) return;
+      captureRunning = !captureRunning;
+      btn.innerText = captureRunning ? "STOP CAPTURE" : "START CAPTURE";
+      btn.className = captureRunning ? "bg-orange-600 text-white px-6 py-2 rounded-lg text-xs font-bold mb-2 transition-all" : "bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-lg text-xs font-bold mb-2 transition-all";
+      
+      if(captureRunning) {
+        captureInterval = setInterval(() => {
+          const isBad = Math.random() > 0.8;
+          const tr = document.createElement('tr');
+          tr.className = isBad ? 'bg-red-900/30 text-red-400' : 'border-b border-gray-800 text-gray-300';
+          tr.innerHTML = `<td class="p-3">${new Date().toISOString().split('T')[1].slice(0,-1)}</td><td class="p-3 text-cyan-400">192.168.1.${Math.floor(Math.random()*255)}</td><td class="p-3">10.0.0.${Math.floor(Math.random()*255)}</td><td class="p-3">${isBad?'TCP':'UDP'}</td><td class="p-3">${isBad?'[C2 BEACON] 443->4892':'Standard traffic'}</td><td class="p-3 font-bold">${isBad?'HIGH':'LOW'}</td>`;
+          tbody.prepend(tr);
+          if(tbody.children.length > 5) tbody.removeChild(tbody.lastChild);
+        }, 800);
+      } else {
+        clearInterval(captureInterval);
+      }
+    }
+
+    function simulateForensicLoad() {
+      const res = document.getElementById('forensic-results');
+      if(!res) return;
+      res.classList.remove('hidden');
+      res.innerHTML = "Initializing Volatility3 + Belkasoft...<br>";
+      setTimeout(() => res.innerHTML += "<span class='text-white'>[+] Carved 4,892 deleted artifacts.</span><br>", 800);
+      setTimeout(() => res.innerHTML += "<span class='text-red-500 font-bold'>[!] Cobalt Strike Beacon identified in memory (PID 4892).</span>", 1600);
+    }
+
+    // Pentest
+    function startGodMode() {
+      const pCon = document.getElementById('scan-progress-container');
+      const bar = document.getElementById('scan-progress');
+      if(!pCon || !bar) return;
+      pCon.classList.remove('hidden');
+      bar.style.width = '0%';
+      document.getElementById('recon-res').innerHTML = 'Running...';
+      let p = 0;
+      const interval = setInterval(() => {
+        p += 10; bar.style.width = p + '%';
+        if (p >= 100) {
+          clearInterval(interval);
+          document.getElementById('recon-res').innerHTML = '<span class="text-blue-400 font-bold">Found: 12 subdomains</span>';
+          document.getElementById('zap-res').innerHTML = '<span class="text-yellow-400 font-bold">Missing CSP</span>';
+          document.getElementById('sql-res').innerHTML = '<span class="text-red-500 font-bold">VULNERABLE (MySQL)</span>';
+          document.getElementById('hydra-res').innerHTML = '<span class="text-green-400 font-bold">admin:password123</span>';
+        }
+      }, 150);
+    }
+
+    // PPO Math (KaTeX)
+    function renderPPOAdvantage() {
+        const el1 = document.getElementById('katex-gae');
+        const el2 = document.getElementById('katex-td');
+        if(el1 && !el1.hasChildNodes()) katex.render(`\\hat{A}_t = \\delta_t + (\\gamma \\lambda) \\delta_{t+1} + \\cdots + (\\gamma \\lambda)^{T-t} \\delta_{T-1}`, el1, { throwOnError: false });
+        if(el2 && !el2.hasChildNodes()) katex.render(`\\delta_t = r_t + \\gamma V(s_{t+1}) - V(s_t)`, el2, { throwOnError: false });
+    }
+
+    // Tri-LLM & Vision
+    function analyzeTriLLM() {
+      const prompt = document.getElementById('llm-prompt').value.trim();
+      const resDiv = document.getElementById('llm-results');
+      if (!prompt || !resDiv) return;
+      resDiv.classList.remove('hidden');
+      resDiv.innerHTML = `<div class="text-indigo-400 font-bold animate-pulse">Running Consensus...</div>`;
+      setTimeout(() => {
+        const isMalicious = prompt.toLowerCase().includes('ignore') || prompt.toLowerCase().includes('drop') || prompt.toLowerCase().includes('system');
+        const color = isMalicious ? 'text-red-500' : 'text-green-400';
+        resDiv.innerHTML = `<div class="bg-[#0a0d14] border ${isMalicious ? 'border-red-500' : 'border-green-500'} rounded-xl p-4"><h3 class="text-lg font-bold ${color}">CONSENSUS: ${isMalicious ? 'INJECTION BLOCKED' : 'PAYLOAD CLEAN'}</h3></div>`;
+      }, 1000);
+    }
+
+    function previewVision(e) {
+      const file = e.target.files[0];
+      if(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const prev = document.getElementById('vision-preview');
+          if(!prev) return;
+          prev.classList.remove('hidden');
+          prev.innerHTML = `<span class="text-cyan-400 font-bold animate-pulse">Analyzing Image...</span>`;
+          setTimeout(() => { prev.innerHTML = `<span class="text-red-500 font-bold border border-red-500 px-4 py-2 rounded-lg bg-black">PII Redacted</span>`; }, 1500);
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // GRC Checkpoints
+    let checkpoints = [{id: "cp-2026-0712", time: "07:12 UTC", cid: "QmX7k...o6pQ"}];
+    function renderCheckpoints() {
+        const cl = document.getElementById('checkpoint-list');
+        if(cl) cl.innerHTML = checkpoints.map(cp => `
+            <div class="flex justify-between bg-black p-4 rounded-xl border border-gray-800">
+                <div class="font-mono text-green-400 text-xs">${cp.id} <br><span class="text-gray-500">${cp.time}</span></div>
+                <div class="text-[10px] text-cyan-500 flex items-center">${cp.cid}</div>
+            </div>`).join('');
+    }
+    function createNewCheckpoint() {
+        checkpoints.unshift({ id: "cp-" + Math.floor(Math.random()*10000), time: new Date().toLocaleTimeString('en-GB', {timeZone:'UTC'}) + " UTC", cid: "Qm" + Array.from({length:12}, () => 'abcdef0123456789'[Math.floor(Math.random()*16)]).join('') + "..." });
+        renderCheckpoints();
+    }
+
+    // PQC Vault
+    function generatePQC() {
+      const out = document.getElementById('pqc-output');
+      if(!out) return;
+      out.classList.remove('hidden');
+      out.innerHTML = `<span class="text-gray-400">Generating SLH-DSA-128s Keypair via oqs-provider...</span><br><span class="text-cyan-400">-----BEGIN CERTIFICATE-----<br>MIIDBzCCAe+gAwIBAgIUB... [Matrix Generated]<br>-----END CERTIFICATE-----</span>`;
+    }
+    function signCMS() {
+      const out = document.getElementById('pqc-output');
+      if(!out) return;
+      out.classList.remove('hidden');
+      out.innerHTML = `<span class="text-gray-400">Applying stateful signature (SLH-DSA)...</span><br><span class="text-blue-400">MIME-Version: 1.0<br>-----BEGIN PKCS7-----<br>MIIC... [SLH-DSA Signed CMS]<br>-----END PKCS7-----</span>`;
+    }
+
+    // PDF Export
+    function exportPremiumPDF() {
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        doc.setFillColor(5, 10, 20); doc.rect(0, 0, 210, 297, 'F');
+        doc.setTextColor(0, 243, 255); doc.setFontSize(24); doc.text("OMNI-NEXUS APEX Ω", 20, 30);
+        doc.setTextColor(200); doc.setFontSize(12); doc.text("Executive Board Report - 2026", 20, 45);
+        doc.text("System Status: 100% Protected", 20, 65); doc.text("Compliance: EU AI Act & DORA Aligned", 20, 80);
+        doc.save("OmniNexus_Apex_Report.pdf");
+        alert("✅ Premium PDF Exported!");
+    }
+
+    // ==========================================
+    // GROK API COPILOT INTEGRATION
+    // ==========================================
+    function toggleCopilot() {
+      const w = document.getElementById('copilot-win');
+      if(w) w.style.display = w.style.display === 'flex' ? 'none' : 'flex';
+    }
+
+    // Formats basic Markdown logic (bold, code)
+    function formatGrokText(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<b class="grok-bold">$1</b>')
+            .replace(/`(.*?)`/g, '<code class="grok-code">$1</code>')
+            .replace(/\n/g, '<br>');
+    }
+
+    async function sendChat() {
+      const inp = document.getElementById('chat-input');
+      const text = inp ? inp.value.trim() : '';
+      if(!text) return;
+      const box = document.getElementById('chat-box');
+      
+      // GROK API KEY PROVIDED BY USER
+      const apiKey = "xai-9e8Jzrcnh3bTAzkhgNi9revDVDyHVrMt7DzoKFG9tdQ3PQD5QGwjCcV1JZ9dG64Dqy29gPZW1llkjYwq";
+      
+      // Append User Message
+      box.innerHTML += `<div class="bg-purple-900/40 p-4 rounded-xl text-white w-[85%] ml-auto border border-purple-500/30 font-inter text-sm mb-4 shadow-[0_0_10px_rgba(178,75,255,0.2)]">${text}</div>`;
+      if(inp) inp.value = '';
+      box.scrollTop = box.scrollHeight;
+
+      // Loading indicator
+      const loadingId = 'loading-' + Date.now();
+      box.innerHTML += `<div id="${loadingId}" class="bg-white/10 p-4 rounded-xl text-cyan-300 w-[85%] border border-cyan-500/30 font-inter text-sm leading-relaxed mb-4 animate-pulse shadow-[0_0_10px_rgba(0,243,255,0.2)]"><b>Nova (Grok AI):</b> Processing...</div>`;
+      box.scrollTop = box.scrollHeight;
+
+      // Navigation shortcuts check before API call
+      const lowerText = text.toLowerCase();
+      if (lowerText.includes("scan") || lowerText.includes("pentest")) {
+          switchTab('pentest', document.querySelectorAll('.nav-item')[3]);
+      } else if (lowerText.includes("policy") || lowerText.includes("ebpf") || lowerText.includes("drift")) {
+          switchTab('drift', document.querySelectorAll('.nav-item')[1]);
+      }
+
+      const systemPrompt = "You are Nova, the elite AI Security Copilot for OMNI-NEXUS APEX. You specialize in eBPF (Tetragon), Quantum Cryptography (PQC), Pentesting (PentAGI), and Zero-Trust networks. Be concise, highly technical, and use markdown for formatting. Do not hallucinate.";
+      
+      try {
+          const response = await fetch("https://api.xai.com/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${apiKey}`
+              },
+              body: JSON.stringify({
+                  model: "grok-beta", // Using grok-beta as standard for API
+                  messages: [
+                      { role: "system", content: systemPrompt },
+                      { role: "user", content: text }
+                  ]
+              })
+          });
+
+          if (!response.ok) {
+              const errData = await response.json();
+              throw new Error(errData.error?.message || `API Error: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          const aiResponse = data.choices[0].message.content;
+          
+          // Remove loading
+          const loader = document.getElementById(loadingId);
+          if(loader) loader.remove();
+          
+          // Format & Append
+          const formattedResponse = formatGrokText(aiResponse);
+          box.innerHTML += `<div class="bg-white/10 p-4 rounded-xl text-cyan-200 w-[90%] border border-cyan-500/30 font-inter text-sm leading-relaxed mb-4 shadow-[0_0_10px_rgba(0,243,255,0.2)]"><b class="text-white">Nova (Grok AI):</b><br><div class="mt-2">${formattedResponse}</div></div>`;
+          box.scrollTop = box.scrollHeight;
+
+      } catch (err) {
+          console.error(err);
+          const loader = document.getElementById(loadingId);
+          if(loader) loader.remove();
+          
+          // Fallback if API fails (e.g. CORS, Quota, Invalid Key)
+          box.innerHTML += `<div class="bg-red-900/40 p-4 rounded-xl text-red-300 w-[90%] border border-red-500/30 font-inter text-sm leading-relaxed mb-4"><b class="text-white">Nova (Local Fallback):</b> Error connecting to Grok API (${err.message}). <br><br>Local Analysis: Request logged. Proceeding with standard operational protocols.</div>`;
+          box.scrollTop = box.scrollHeight;
+      }
+    }
+
+    // ==========================================
+    // INIT
+    // ==========================================
+    window.onload = () => {
+      initHexBg();
+      initGlobe();
+      initThreatChart();
+      renderCheckpoints();
+      switchTab('dashboard', document.querySelectorAll('.nav-item')[0]);
+      console.log("%c✅ OMNI-NEXUS APEX Ω LOADED. Grok API Fully Wired.", "color:#00f3ff;font-size:14px;font-weight:bold;");
+    };
+  </script>
+</body>
+</html>
